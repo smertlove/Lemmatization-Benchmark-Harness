@@ -67,7 +67,10 @@ class Calculator:
         if not y:
             return 0.0
 
-        return sum(cer(target, pred) for target, pred in zip(y, y_bar)) / len(y)
+        return sum(
+            cer(target, pred)
+            for target, pred in zip(y, y_bar)
+        ) / len(y)
 
     def CER(self, y: str | list[str], y_bar: str | list[str], normalize=False):
         """
