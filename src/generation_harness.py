@@ -213,17 +213,20 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
 
         return result
 
-    def predict_w_caching(
+    def predict_fast(
         self,
         inpts: list[str],
         max_length=32,
         batch_size=32,
         verbose=True,
     ) -> list[str]:
+        """
+        Быстрый `.predict` с привлечением кеша и эвристик
+        """
         result = []
 
         ln = len(inpts)
-        bs = batch_size * 3
+        bs = batch_size * 3  # Нужно чтобы на модель отправлялся примерно нужный батчсайз после кеша
 
         if verbose:
             tot = math.ceil(ln / bs)
