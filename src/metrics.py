@@ -1,7 +1,6 @@
 import pymorphy3 as pm
 from functools import lru_cache
 from jiwer import cer
-import numpy as np
 
 
 class _Lemmatizer:
