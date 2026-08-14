@@ -6,8 +6,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "cachetools>=7.1.7",
+    "jiwer>=4.0.0",
     "pandas>=3.0.5",
     "pandas-stubs>=3.0.5.260730",
+    "pymorphy3>=2.0.6",
     "scipy-stubs>=1.18.0.1",
     "seaborn>=0.13.2",
     "torch>=2.13.0",
