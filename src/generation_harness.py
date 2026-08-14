@@ -9,7 +9,6 @@ import torch
 
 from typing import Callable
 
-
 Heuristic = Callable[[str], str | None]
 
 
@@ -117,7 +116,7 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
         tokenizer: PreTrainedTokenizer,
         device="cuda",
         cache_size=100000,
-        heuristics_stack: list[Heuristic]=list(),
+        heuristics_stack: list[Heuristic] = list(),
     ):
         super().__init__(model, tokenizer, device)
 
@@ -168,10 +167,7 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
         """
         uniq_inpts = list(set(batch))
         preds = self.predict(
-            uniq_inpts,
-            max_length=max_length,
-            batch_size=batch_size,
-            verbose=False
+            uniq_inpts, max_length=max_length, batch_size=batch_size, verbose=False
         )
 
         # Локальный кеш
@@ -226,7 +222,9 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
         result = []
 
         ln = len(inpts)
-        bs = batch_size * 3  # Нужно чтобы на модель отправлялся примерно нужный батчсайз после кеша
+        bs = (
+            batch_size * 3
+        )  # Нужно чтобы на модель отправлялся примерно нужный батчсайз после кеша
 
         if verbose:
             tot = math.ceil(ln / bs)
