@@ -20,18 +20,14 @@ class Calculator:
         self.lemmatizer = _Lemmatizer()
 
     def _preproc(self, words: list[str]):
-        return [
-            word.lower().replace("ё", "е")
-            for word in words
-        ]
+        return [word.lower().replace("ё", "е") for word in words]
 
     def _normalize(self, words: list[str]):
-        return [
-            self.lemmatizer.lemmatize(word)
-            for word in words
-        ]
+        return [self.lemmatizer.lemmatize(word) for word in words]
 
-    def _conditional_conversion(self, y: str|list[str], y_bar:str|list[str], normalize=False):
+    def _conditional_conversion(
+        self, y: str | list[str], y_bar: str | list[str], normalize=False
+    ):
         if isinstance(y, str):
             y = [y]
 
@@ -45,11 +41,11 @@ class Calculator:
 
         if normalize:
             y = self._normalize(y)
-            y_bar = self._normalize(y_bar) 
+            y_bar = self._normalize(y_bar)
 
         return y, y_bar
 
-    def _lAcc(self, y: list[str], y_bar:list[str]):
+    def _lAcc(self, y: list[str], y_bar: list[str]):
 
         hits = 0
         for target, pred in zip(y, y_bar):
@@ -57,22 +53,22 @@ class Calculator:
                 hits += 1
 
         return hits / len(y)
-        
-    def lAcc(self, y: str|list[str], y_bar:str|list[str], normalize=False):
+
+    def lAcc(self, y: str | list[str], y_bar: str | list[str], normalize=False):
         """
-            Lemmatization accuracy for Russian
-            disregarding е/ё choice and upper/lower case
+        Lemmatization accuracy for Russian
+        disregarding е/ё choice and upper/lower case
         """
         y, y_bar = self._conditional_conversion(y, y_bar)
         return self._lAcc(y, y_bar)
 
-    def _CER(self, y: list[str], y_bar:list[str]):
+    def _CER(self, y: list[str], y_bar: list[str]):
         return cer(y, y_bar)
 
-    def CER(self, y: str|list[str], y_bar:str|list[str], normalize=False):
+    def CER(self, y: str | list[str], y_bar: str | list[str], normalize=False):
         """
-            Lemmatization CER for Russian
-            disregarding е/ё choice and upper/lower case
+        Lemmatization CER for Russian
+        disregarding е/ё choice and upper/lower case
         """
         y, y_bar = self._conditional_conversion(y, y_bar)
         return self._CER(y, y_bar)
