@@ -25,15 +25,15 @@ class GenerativeModel:
         self.model.eval()
         self.tokenizer = tokenizer
 
-    def preproc(self, texts: list[str]):
+    def model_preproc(self, texts: list[str]):
         """
-        Предобрабатывает входные тексты
+        Предобрабатывает входные тексты для модели
         """
         return texts
 
-    def postproc(self, texts: list[str]):
+    def model_postproc(self, texts: list[str]):
         """
-        Постобрабатывает гипотезы
+        Постобрабатывает гипотезы модели
         """
         return texts
 
@@ -48,13 +48,13 @@ class GenerativeModel:
         Предобрабатывает тексты, генерирует леммы и постобрабатывает их.
         """
 
-        texts = self.preproc(texts)
+        texts = self.model_preproc(texts)
 
         preds = self._predict(
             texts, max_length=max_length, batch_size=batch_size, verbose=verbose
         )
 
-        preds = self.postproc(preds)
+        preds = self.model_postproc(preds)
 
         return preds
 
@@ -116,12 +116,12 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
         tokenizer: PreTrainedTokenizer,
         device="cuda",
         cache_size=100000,
-        heuristics_stack: list[Heuristic] = list(),
+        heuristics_stack: list[Heuristic] | None = None,
     ):
         super().__init__(model, tokenizer, device)
 
         self._cache: LRUCache = LRUCache(maxsize=cache_size)
-        self._heuristics_stack = heuristics_stack
+        self._heuristics_stack = heuristics_stack if heuristics_stack is not None else list()
 
     def _add_to_global_cache(self, key: str, val: str):
         self._cache[key] = val
