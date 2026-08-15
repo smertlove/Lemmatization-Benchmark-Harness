@@ -112,9 +112,12 @@ class ThroughputTimer:
         return end - self._start
 
     @property
-    def tps(self) -> float:
+    def lps(self) -> float:
+        """
+            Lemmas per Second
+        """
         if self._samples is None:
-            raise RuntimeError("stop(samples) must be called before reading tps")
+            raise RuntimeError("stop(samples) must be called before reading lps")
         if self._samples == 0:
             return 0.0
 
