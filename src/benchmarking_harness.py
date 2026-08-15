@@ -67,12 +67,14 @@ def benchmark_lemmatization_quality(predict_fn, df: pd.DataFrame, get_sample_fro
     metrics = []
 
     for freq_class, group in freq_groups.items():
+        errors = group[group["lAcc"] == 0.0]
+
         metrics.append({
             "freq_class": freq_class,
             "lAcc": group["lAcc"].mean(),
             "lAcc (norm)": group["lAcc (norm)"].mean(),
             "CER (total)": group["CER"].mean(),
-            "CER (errors)": group[group["pred"] != group["target"]]["CER"].mean(),
+            "CER (errors)": errors["CER"].mean() if not errors.empty else 0.0,
         })
 
     return pd.DataFrame(metrics)
