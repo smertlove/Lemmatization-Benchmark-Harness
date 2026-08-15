@@ -163,11 +163,11 @@ def _run_tests():
     time.sleep(0.05)
     timer.stop(100)
     assert timer.elapsed >= 0.05
-    assert 500 < timer.tps < 5000
+    assert 500 < timer.lps < 5000
 
     timer.start()
     timer.stop(0)
-    assert timer.tps == 0.0
+    assert timer.lps == 0.0
 
     try:
         ThroughputTimer().stop(1)
