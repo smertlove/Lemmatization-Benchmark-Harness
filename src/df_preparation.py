@@ -30,11 +30,10 @@ def add_freq_class(df: pd.DataFrame):
     """
         Добавляет колонку freq_class в датафрейм
     """
-    df_copy = df.copy()
 
-    df_copy["freq_class"] = df_copy["freq_rank"].map(_get_freq_class)
+    df["freq_class"] = df["freq_rank"].map(_get_freq_class)
 
-    return df_copy
+    return df
 
 
 def get_sample_from_row_original(row):
