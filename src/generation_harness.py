@@ -121,7 +121,9 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
         super().__init__(model, tokenizer, device)
 
         self._cache: LRUCache = LRUCache(maxsize=cache_size)
-        self._heuristics_stack = heuristics_stack if heuristics_stack is not None else list()
+        self._heuristics_stack = (
+            heuristics_stack if heuristics_stack is not None else list()
+        )
 
     def _add_to_global_cache(self, key: str, val: str):
         self._cache[key] = val
@@ -240,6 +242,7 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
             result.extend(preds)
 
         return result
+
 
 __all__ = (
     "GenerativeModel",

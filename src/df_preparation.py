@@ -3,7 +3,7 @@ import pandas as pd
 
 def _get_freq_class(rank: str):
     """
-        Определяет частотный класс по частотному рангу
+    Определяет частотный класс по частотному рангу
     """
 
     if rank == "other":
@@ -28,7 +28,7 @@ def _get_freq_class(rank: str):
 
 def add_freq_class(df: pd.DataFrame):
     """
-        Добавляет колонку freq_class в датафрейм
+    Добавляет колонку freq_class в датафрейм
     """
 
     df["freq_class"] = df["freq_rank"].map(_get_freq_class)
@@ -38,28 +38,23 @@ def add_freq_class(df: pd.DataFrame):
 
 def get_sample_from_row_original(row):
     """
-        Сампл для оригинальной модели.
-        Возвращает входную строку.
+    Сампл для оригинальной модели.
+    Возвращает входную строку.
     """
     form = row["form"]
     pos = row["pos"]
     feats = row["feats"]
 
-    sample = " ".join(
-        filter(
-            lambda elem: pd.notna(elem),
-            [form, pos, feats]
-        )
-    )
+    sample = " ".join(filter(lambda elem: pd.notna(elem), [form, pos, feats]))
 
     return sample
 
 
 def filter_irrelevant(df):
     """
-        Убирает из датафрема строки по которым мы не хотим считать статистики.
+    Убирает из датафрема строки по которым мы не хотим считать статистики.
     """
-    
+
     df_filtered = df[
         ~df["feats"].str.contains("Typo", na=False)
         & ~df["feats"].str.contains("Abbr", na=False)
@@ -67,6 +62,7 @@ def filter_irrelevant(df):
         & ~df["feats"].str.contains("SYM", na=False)
     ]
     return df_filtered
+
 
 __all__ = (
     "add_freq_class",

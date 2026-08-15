@@ -68,10 +68,7 @@ class Calculator:
         if not y:
             return 0.0
 
-        return sum(
-            cer(target, pred)
-            for target, pred in zip(y, y_bar)
-        ) / len(y)
+        return sum(cer(target, pred) for target, pred in zip(y, y_bar)) / len(y)
 
     def CER(self, y: str | list[str], y_bar: str | list[str], normalize=False):
         """
@@ -114,7 +111,7 @@ class ThroughputTimer:
     @property
     def lps(self) -> float:
         """
-            Lemmas per Second
+        Lemmas per Second
         """
         if self._samples is None:
             raise RuntimeError("stop(samples) must be called before reading lps")
@@ -132,7 +129,6 @@ def _run_tests():
 
     def _assert_close(actual: float, expected: float, tol: float = 1e-9):
         assert abs(actual - expected) <= tol, f"{actual} != {expected}"
-
 
     calc = Calculator()
 
