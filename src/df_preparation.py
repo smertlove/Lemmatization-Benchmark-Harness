@@ -26,7 +26,7 @@ def _get_freq_class(rank: str):
     return "10001-n"
 
 
-def _add_freq_class(df: pd.DataFrame):
+def add_freq_class(df: pd.DataFrame):
     """
         Добавляет колонку freq_class в датафрейм
     """
@@ -68,3 +68,9 @@ def filter_irrelevant(df):
         & ~df["feats"].str.contains("SYM", na=False)
     ]
     return df_filtered
+
+__all__ = (
+    "add_freq_class",
+    "get_sample_from_row_original",
+    "filter_irrelevant",
+)

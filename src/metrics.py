@@ -1,6 +1,7 @@
 import pymorphy3 as pm
 from functools import lru_cache
 from jiwer import cer
+import time
 
 
 class _Lemmatizer:
@@ -81,6 +82,49 @@ class Calculator:
         return self._CER(y, y_bar)
 
 
+class ThroughputTimer:
+
+    def __init__(self):
+        self._start: float | None = None
+        self._stop: float | None = None
+        self._samples: int | None = None
+
+    def start(self):
+        self._start = time.perf_counter()
+        self._stop = None
+        self._samples = None
+
+    def stop(self, samples: int):
+        if self._start is None:
+            raise RuntimeError("start() must be called before stop()")
+        if samples < 0:
+            raise ValueError("samples must be non-negative")
+
+        self._stop = time.perf_counter()
+        self._samples = samples
+
+    @property
+    def elapsed(self) -> float:
+        if self._start is None:
+            raise RuntimeError("start() must be called before reading elapsed")
+
+        end = self._stop if self._stop is not None else time.perf_counter()
+        return end - self._start
+
+    @property
+    def tps(self) -> float:
+        if self._samples is None:
+            raise RuntimeError("stop(samples) must be called before reading tps")
+        if self._samples == 0:
+            return 0.0
+
+        elapsed = self.elapsed
+        if elapsed == 0:
+            return 0.0
+
+        return self._samples / elapsed
+
+
 def _run_tests():
 
     def _assert_close(actual: float, expected: float, tol: float = 1e-9):
@@ -111,6 +155,24 @@ def _run_tests():
     else:
         raise AssertionError("expected length mismatch to fail")
 
+    timer = ThroughputTimer()
+    timer.start()
+    time.sleep(0.05)
+    timer.stop(100)
+    assert timer.elapsed >= 0.05
+    assert 500 < timer.tps < 5000
+
+    timer.start()
+    timer.stop(0)
+    assert timer.tps == 0.0
+
+    try:
+        ThroughputTimer().stop(1)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("expected stop() without start() to fail")
+
     print("metrics.py: all tests passed")
 
 
@@ -118,4 +180,4 @@ if __name__ == "__main__":
     _run_tests()
 
 
-__all__ = ("Calculator",)
+__all__ = ("Calculator", "ThroughputTimer")
