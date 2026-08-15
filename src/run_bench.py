@@ -37,12 +37,8 @@ def _validate_csv_paths(paths: list[Path], arg_name: str) -> None:
             raise FileNotFoundError(f"{arg_name}: CSV not found: {path}")
 
 
-def main(argv: list[str] | None = None) -> Namespace:
+def run_bench(argv: list[str] | None = None) -> Namespace:
     args = parse_args(argv)
     _validate_csv_paths(args.quality_csvs, "--quality-csvs")
     _validate_csv_paths(args.speed_csvs, "--speed-csvs")
     return args
-
-
-if __name__ == "__main__":
-    main()
