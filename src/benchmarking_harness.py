@@ -6,8 +6,8 @@ import pandas as pd
 
 def benchmark_throughput(predict_fn, df: pd.DataFrame, get_sample_from_row):
     """
-        Замеряет TPS и lAcc.
-        TPS -- Tokens per Second, кол-во лемм, которые мы генерируем за секунду.
+        Замеряет lps и lAcc.
+        lps -- Lemmas per Second, кол-во лемм, которые мы генерируем за секунду.
         lAcc -- Lemmatization Accuracy, см. src/metrics.py
 
         lAcc мерим чтобы понять, что predict_fn действительно работает как надо и мы не получаем там мусорные предсказания из-за ошибки.
