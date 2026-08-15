@@ -240,3 +240,8 @@ class GenerativeModelWithCachingAndHeuristics(GenerativeModel):
             result.extend(preds)
 
         return result
+
+__all__ = (
+    "GenerativeModel",
+    "GenerativeModelWithCachingAndHeuristics",
+)
