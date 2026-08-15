@@ -1,5 +1,5 @@
-from df_preparation import filter_irrelevant, add_freq_class
-from metrics import Calculator, ThroughputTimer
+from .df_preparation import filter_irrelevant, add_freq_class
+from .metrics import Calculator, ThroughputTimer
 
 import pandas as pd
 
