@@ -1,0 +1,1 @@
+One should run these scripts from root directory.
