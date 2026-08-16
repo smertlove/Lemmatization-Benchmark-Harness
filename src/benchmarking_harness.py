@@ -20,6 +20,26 @@ def _safe_mean(series: pd.Series) -> float:
     return float(series.mean())
 
 
+def sanity_check(gen_model) -> None:
+    predict_fn = lambda texts: gen_model.predict_fast(texts, batch_size=2)
+
+    cases = [
+        "дырой NOUN Animacy:Inan Case:Ins Gender:Fem Number:Sing",
+        "норой NOUN Animacy:Inan Case:Ins Gender:Fem Number:Sing",
+    ]
+    golds = ["дыра", "нора"]
+
+    preds = predict_fn(cases)
+
+    assert len(preds) == len(golds)
+    for pred, gold in zip(preds, golds):
+        assert pred == gold, f"{pred} != {gold}"
+
+    assert len(gen_model._cache) == 2
+    gen_model.clear_cache()
+    assert len(gen_model._cache) == 0
+
+
 def _benchmark_throughput_single_df(predict_fn, clear_cache_fn, df: pd.DataFrame, get_sample_from_row):
     """
     Замеряет lps и lAcc.

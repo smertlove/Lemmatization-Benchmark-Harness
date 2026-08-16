@@ -1,12 +1,16 @@
+import gc
+from pathlib import Path
+
+import torch
+from transformers import AutoTokenizer, BartForConditionalGeneration
+
 from src import (
+    GenerativeModelWithCachingAndHeuristics,
     benchmark_lemmatization_quality,
     benchmark_throughput,
-    GenerativeModelWithCachingAndHeuristics,
-    get_sample_from_row_original
+    get_sample_from_row_original,
+    sanity_check,
 )
-from pathlib import Path
-from transformers import BartForConditionalGeneration, AutoTokenizer
-
 
 data_dir = Path("/mnt/data_storage/datasets/generative_lemmatization_datasets/csvs/bench")
 models_dir = Path("/mnt/data_storage/models/generative_lemmatization")
@@ -26,71 +30,81 @@ quality_csvs = [
     data_dir / "poetic_20.csv",
 ]
 
-NODEL_NAME = "baseline"
-MODEL_ID = models_dir / NODEL_NAME
+MODEL_NAME = "baseline"
+MODEL_ID = models_dir / MODEL_NAME
 BATCH_SIZE = 512
+CACHE_SIZE = 5_000_000
 
-## ==== Sanity check ==== ##
 
-model = BartForConditionalGeneration.from_pretrained(MODEL_ID)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+def load_gen_model(dtype: str) -> GenerativeModelWithCachingAndHeuristics:
+    torch_dtype = torch.float16 if dtype == "fp16" else torch.float32
+    model = BartForConditionalGeneration.from_pretrained(MODEL_ID, torch_dtype=torch_dtype)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    return GenerativeModelWithCachingAndHeuristics(
+        model, tokenizer, cache_size=CACHE_SIZE
+    )
 
-gen_model = GenerativeModelWithCachingAndHeuristics(model, tokenizer, cache_size=5000000)
 
-predict_fn = lambda texts: gen_model.predict_fast(texts, batch_size=BATCH_SIZE)
-clear_cache_fn = gen_model.clear_cache
+def release_gen_model(gen_model: GenerativeModelWithCachingAndHeuristics) -> None:
+    del gen_model.model, gen_model.tokenizer, gen_model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
-cases = [
-    "дырой NOUN Animacy:Inan Case:Ins Gender:Fem Number:Sing",
-    "норой NOUN Animacy:Inan Case:Ins Gender:Fem Number:Sing",
-]
 
-golds = ["дыра", "нора",]
+def run_throughput_benchmark(
+    gen_model: GenerativeModelWithCachingAndHeuristics,
+    dtype: str,
+    caching: bool,
+) -> None:
+    if caching:
+        predict_fn = lambda texts: gen_model.predict_fast(texts, batch_size=BATCH_SIZE)
+    else:
+        predict_fn = lambda texts: gen_model.predict(texts, batch_size=BATCH_SIZE)
 
-preds = predict_fn(cases)
+    benchmark_throughput(
+        predict_fn,
+        gen_model.clear_cache,
+        MODEL_NAME,
+        get_sample_from_row_original,
+        throughput_csvs,
+        throughput_table,
+        dtype,
+        caching,
+    )
 
-assert len(preds) == len(golds)
-for pred, gold in zip(preds, golds):
-    assert pred == gold, f"{pred} != {gold}"
 
-assert len(gen_model._cache) == 2
-clear_cache_fn()
-assert len(gen_model._cache) == 0
+def run_quality_benchmark(gen_model: GenerativeModelWithCachingAndHeuristics) -> None:
+    predict_fn = lambda texts: gen_model.predict_fast(texts, batch_size=BATCH_SIZE)
 
-## ==== Benchmark throughput ==== ##
-## fp32; no caching
+    benchmark_lemmatization_quality(
+        predict_fn,
+        MODEL_NAME,
+        get_sample_from_row_original,
+        quality_csvs,
+        quality_table,
+    )
 
-predict_fn = lambda texts: gen_model.predict(texts, batch_size=BATCH_SIZE)
-clear_cache_fn = gen_model.clear_cache
 
-benchmark_throughput(
-    predict_fn,
-    clear_cache_fn,
-    NODEL_NAME,
-    get_sample_from_row_original,
-    throughput_csvs,
-    throughput_table,
-    "fp32",
-    False,
-)
+if __name__ == "__main__":
 
-## fp32; + caching
+    ## ==== fp32 ==== ##
 
-predict_fn = lambda texts: gen_model.predict_fast(texts, batch_size=BATCH_SIZE)
-clear_cache_fn = gen_model.clear_cache
+    gen_model = load_gen_model("fp32")
+    sanity_check(gen_model)
 
-benchmark_throughput(
-    predict_fn,
-    clear_cache_fn,
-    NODEL_NAME,
-    get_sample_from_row_original,
-    throughput_csvs,
-    throughput_table,
-    "fp32",
-    False,
-)
+    run_throughput_benchmark(gen_model, dtype="fp32", caching=False)
+    run_throughput_benchmark(gen_model, dtype="fp32", caching=True)
 
-## fp16; no caching
-# TODO: reinit model?
+    release_gen_model(gen_model)
 
-## fp16; + caching
+    ## ==== fp16 ==== ##
+
+    gen_model = load_gen_model("fp16")
+
+    run_throughput_benchmark(gen_model, dtype="fp16", caching=False)
+    run_throughput_benchmark(gen_model, dtype="fp16", caching=True)
+
+    run_quality_benchmark(gen_model)
+
+    release_gen_model(gen_model)
