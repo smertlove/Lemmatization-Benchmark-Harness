@@ -5,7 +5,16 @@ import pandas as pd
 from pathlib import Path
 
 
-def benchmark_throughput(predict_fn, df: pd.DataFrame, get_sample_from_row):
+def _load_df(path: Path):
+    assert path.exists()
+    return pd.read_csv(path, sep="\t")
+
+
+def _save_df(df: pd.DataFrame, name: Path):
+    df.to_csv(name, sep="\t", index=None)
+
+
+def _benchmark_throughput_single_df(predict_fn, df: pd.DataFrame, get_sample_from_row):
     """
     Замеряет lps и lAcc.
     lps -- Lemmas per Second, кол-во лемм, которые мы генерируем за секунду.
@@ -25,6 +34,35 @@ def benchmark_throughput(predict_fn, df: pd.DataFrame, get_sample_from_row):
     timer.stop(total)
 
     return {"lps": timer.lps, "lAcc": calculator.lAcc(targets, preds)}
+
+
+def benchmark_throughput(
+    predict_fn,  # Note: это должен быть predict_fast или любая штука, активно привлекающая кеширование
+    model_name: str,
+    get_sample_from_row,
+    throughput_csvs_paths: list[Path],
+    throughput_table_path: Path,
+    dtype,
+    caching,
+):
+    throughput_table = _load_df(throughput_table_path)
+    assert model_name not in throughput_table["model name"].unique(), f"{model_name} already logged."
+
+    for p in throughput_csvs_paths:
+        print(f"Processing {p.name}...")
+        subset_name = p.stem
+
+        df = _load_df(p)
+        cur_metrics = _benchmark_throughput_single_df(predict_fn, df, get_sample_from_row)
+        cur_metrics["dtype"] = dtype
+        cur_metrics["caching"] = caching
+        cur_metrics["subset"] = subset_name
+        cur_metrics["model name"] = model_name
+
+        df = pd.DataFrame(cur_metrics)
+        throughput_table = pd.concat([throughput_table, df], ignore_index=True)
+
+    _save_df(throughput_table, throughput_table_path)
 
 
 def _calc_metrics_by_freq_class(df: pd.DataFrame):
@@ -55,7 +93,7 @@ def _calc_metrics_by_freq_class(df: pd.DataFrame):
 
     return metrics
 
-def benchmark_lemmatization_quality_single_df(predict_fn, df: pd.DataFrame, get_sample_from_row):
+def _benchmark_lemmatization_quality_single_df(predict_fn, df: pd.DataFrame, get_sample_from_row):
 
     ## Фильтры и сплиты выносим сюда потому что некоторые датафреймы у нас очень большие и долго предобрабатываются 
     df = filter_irrelevant(df)
@@ -103,15 +141,6 @@ def benchmark_lemmatization_quality_single_df(predict_fn, df: pd.DataFrame, get_
     return all_metrics
 
 
-def _load_df(path: Path):
-    assert path.exists()
-    return pd.read_csv(path, sep="\t")
-
-
-def _save_df(df: pd.DataFrame, name: Path):
-    df.to_csv(name, sep="\t", index=None)
-
-
 def benchmark_lemmatization_quality(
     predict_fn,  # Note: это должен быть predict_fast или любая штука, активно привлекающая кеширование
     model_name: str,
@@ -132,7 +161,7 @@ def benchmark_lemmatization_quality(
         subset_name = p.stem
 
         df = _load_df(p)
-        cur_metrics = benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
+        cur_metrics = _benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
         for row in cur_metrics:
             row["subset name"] = subset_name
             row["model name"] = model_name
