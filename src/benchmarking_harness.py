@@ -56,7 +56,6 @@ def benchmark_throughput(
     caching,
 ):
     throughput_table = _load_df(throughput_table_path)
-    assert model_name not in throughput_table["model name"].unique(), f"{model_name} already logged."
 
     for p in throughput_csvs_paths:
         print(f"Processing {p.name}...")
@@ -163,7 +162,6 @@ def benchmark_lemmatization_quality(
     """
 
     quality_table = _load_df(quality_table_path)
-    assert model_name not in quality_table["model name"].unique(), f"{model_name} already logged."
 
     for p in quality_csvs_paths:
 
