@@ -14,6 +14,12 @@ def _save_df(df: pd.DataFrame, name: Path):
     df.to_csv(name, sep="\t", index=None)
 
 
+def _safe_mean(series: pd.Series) -> float:
+    if series.empty:
+        return 0.0
+    return float(series.mean())
+
+
 def _benchmark_throughput_single_df(predict_fn, clear_cache_fn, df: pd.DataFrame, get_sample_from_row):
     """
     Замеряет lps и lAcc.
@@ -36,7 +42,7 @@ def _benchmark_throughput_single_df(predict_fn, clear_cache_fn, df: pd.DataFrame
     preds = predict_fn(inpts)
     timer.stop(total)
 
-    return {"lps": timer.lps, "lAcc": calculator.lAcc(targets, preds)}
+    return {"LPS": timer.lps, "lAcc": calculator.lAcc(targets, preds)}
 
 
 def benchmark_throughput(
@@ -63,8 +69,8 @@ def benchmark_throughput(
         cur_metrics["subset name"] = subset_name
         cur_metrics["model name"] = model_name
 
-        df = pd.DataFrame(cur_metrics)
-        throughput_table = pd.concat([throughput_table, df], ignore_index=True)
+        row = pd.DataFrame([cur_metrics])
+        throughput_table = pd.concat([throughput_table, row], ignore_index=True)
 
     _save_df(throughput_table, throughput_table_path)
 
@@ -87,11 +93,11 @@ def _calc_metrics_by_freq_class(df: pd.DataFrame):
 
         metrics.append(
             {
-                "freq_class": freq_class,
-                "lAcc": group["lAcc"].mean(),
-                "lAcc (norm)": group["lAcc (norm)"].mean(),
-                "CER (total)": group["CER"].mean(),
-                "CER (errors)": errors["CER"].mean() if not errors.empty else 0.0,
+                "class": freq_class,
+                "lAcc": _safe_mean(group["lAcc"]),
+                "lAcc (norm)": _safe_mean(group["lAcc (norm)"]),
+                "CER (total)": _safe_mean(group["CER"]),
+                "CER (errors)": _safe_mean(errors["CER"]),
             }
         )
 
@@ -138,7 +144,7 @@ def _benchmark_lemmatization_quality_single_df(predict_fn, df: pd.DataFrame, get
     ):
         cur_metrics = _calc_metrics_by_freq_class(cur_df)
         for row in cur_metrics:
-            row["split name"] = split_name
+            row["split"] = split_name
 
         all_metrics.extend(cur_metrics)
 
