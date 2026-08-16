@@ -126,7 +126,6 @@ def benchmark_lemmatization_quality(
     quality_table = _load_df(quality_table_path)
     assert model_name not in quality_table["model name"].unique(), f"{model_name} already logged."
 
-    all_metrics = []
     for p in quality_csvs_paths:
 
         print(f"Processing {p.name}...")
@@ -136,11 +135,9 @@ def benchmark_lemmatization_quality(
         cur_metrics = benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
         for row in cur_metrics:
             row["subset name"] = subset_name
-            row["model name"]
+            row["model name"] = model_name
 
-        all_metrics.extend(cur_metrics)
-
-        df = pd.DataFrame(all_metrics)
+        df = pd.DataFrame(cur_metrics)
         quality_table = pd.concat([quality_table, df], ignore_index=True)
 
     _save_df(quality_table, quality_table_path)
