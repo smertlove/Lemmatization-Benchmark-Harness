@@ -189,12 +189,13 @@ def benchmark_lemmatization_quality(
         subset_name = p.stem
 
         df = _load_df(p)
-        cur_metrics = _benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
-        for row in cur_metrics:
-            row["subset name"] = subset_name
-            row["model name"] = model_name
+        print(df.shape)
+    #     cur_metrics = _benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
+    #     for row in cur_metrics:
+    #         row["subset name"] = subset_name
+    #         row["model name"] = model_name
 
-        df = pd.DataFrame(cur_metrics)
-        quality_table = pd.concat([quality_table, df], ignore_index=True)
+    #     df = pd.DataFrame(cur_metrics)
+    #     quality_table = pd.concat([quality_table, df], ignore_index=True)
 
-    _save_df(quality_table, quality_table_path)
+    # _save_df(quality_table, quality_table_path)
