@@ -1,16 +1,18 @@
 import pandas as pd
 
 
-def _get_freq_class(rank: str):
+def _get_freq_class(row):
     """
     Определяет частотный класс по частотному рангу
     """
 
+    if row["pos"] == "PUNCT":
+        return "punct"
+
+    rank = row["freq_rank"]
+
     if rank == "other":
         return "10001-n"
-
-    if rank == "punct":
-        return "punct"
 
     rank_int = int(rank)
 
@@ -31,7 +33,7 @@ def add_freq_class(df: pd.DataFrame):
     Добавляет колонку freq_class в датафрейм
     """
 
-    df["freq_class"] = df["freq_rank"].map(_get_freq_class)
+    df["freq_class"] = df.apply(_get_freq_class, axis=1)
 
     return df
 
