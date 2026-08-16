@@ -2,6 +2,7 @@ from .df_preparation import filter_irrelevant, add_freq_class
 from .metrics import Calculator, ThroughputTimer
 
 import pandas as pd
+from pathlib import Path
 
 
 def benchmark_throughput(predict_fn, df: pd.DataFrame, get_sample_from_row):
@@ -26,26 +27,7 @@ def benchmark_throughput(predict_fn, df: pd.DataFrame, get_sample_from_row):
     return {"lps": timer.lps, "lAcc": calculator.lAcc(targets, preds)}
 
 
-def benchmark_lemmatization_quality(predict_fn, df: pd.DataFrame, get_sample_from_row):
-    df = filter_irrelevant(df)
-    df = add_freq_class(df)
-
-    inpts = df.apply(get_sample_from_row, axis=1).tolist()
-    df["pred"] = predict_fn(inpts)
-
-    calculator = Calculator()
-
-    df["lAcc"] = df.apply(
-        lambda row: calculator.lAcc(row["lemma"], row["pred"]), axis=1
-    )
-
-    df["lAcc (norm)"] = df.apply(
-        lambda row: calculator.lAcc(row["lemma"], row["pred"], normalize=True), axis=1
-    )
-
-    df["CER"] = df.apply(lambda row: calculator.CER(row["lemma"], row["pred"]), axis=1)
-
-    ## Мы не мерим здесь CER потому что эта метрика примерно ни о чем нам не говорит.
+def _calc_metrics_by_freq_class(df: pd.DataFrame):
 
     freq_groups = {
         "1-100": df[df["freq_class"] == "1-100"],
@@ -71,4 +53,94 @@ def benchmark_lemmatization_quality(predict_fn, df: pd.DataFrame, get_sample_fro
             }
         )
 
-    return pd.DataFrame(metrics)
+    return metrics
+
+def benchmark_lemmatization_quality_single_df(predict_fn, df: pd.DataFrame, get_sample_from_row):
+
+    ## Фильтры и сплиты выносим сюда потому что некоторые датафреймы у нас очень большие и долго предобрабатываются 
+    df = filter_irrelevant(df)
+    df = add_freq_class(df)
+    df["inpt"] = df.apply(get_sample_from_row, axis=1).tolist()
+
+    ## По той же причине здесь греем кеш: без этого действия замер на только одном сабсете растягивается на несколько часов
+    uniq_samples = df["inpt"].unique().tolist()
+    predict_fn(uniq_samples)
+
+    ## Т.к. кеш прогрет, вот эта операция уже должна быть примерно моментальной
+    inpts = df["inpt"].tolist()
+    df["pred"] = predict_fn(inpts)
+
+    calculator = Calculator()
+
+    ## Метрики для каждой пары тоже достаточно посчитать только один раз
+    df["lAcc"] = df.apply(
+        lambda row: calculator.lAcc(row["lemma"], row["pred"]), axis=1
+    )
+
+    df["lAcc (norm)"] = df.apply(
+        lambda row: calculator.lAcc(row["lemma"], row["pred"], normalize=True), axis=1
+    )
+
+    df["CER"] = df.apply(lambda row: calculator.CER(row["lemma"], row["pred"]), axis=1)
+
+    ## Мы не мерим здесь normalized CER потому что эта метрика примерно ни о чем нам не говорит.
+
+    ## Теперь расчитаем метрики для всех категорий которые нам нужны
+
+    all_metrics = []
+
+    for cur_df, split_name in (
+        (df[df["split"] == "holdout"], "holdout"),
+        (df[df["split"] == "unknown"], "unknown"),
+        (df, "all"),
+    ):
+        cur_metrics = _calc_metrics_by_freq_class(cur_df)
+        for row in cur_metrics:
+            row["split name"] = split_name
+
+        all_metrics.extend(cur_metrics)
+
+    return all_metrics
+
+
+def _load_df(path: Path):
+    assert path.exists()
+    return pd.read_csv(path, sep="\t")
+
+
+def _save_df(df: pd.DataFrame, name: Path):
+    df.to_csv(name, sep="\t", index=None)
+
+
+def benchmark_lemmatization_quality(
+    predict_fn,  # Note: это должен быть predict_fast или любая штука, активно привлекающая кеширование
+    model_name: str,
+    get_sample_from_row,
+    quality_csvs_paths: list[Path],
+    quality_table_path: Path,
+):
+    """
+    для корректной работы аргумент predict_fn должен быть predict_fast или любой штукой, активно привлекающей кеширование
+    """
+
+    quality_table = _load_df(quality_table_path)
+    assert model_name not in quality_table["model name"].unique(), f"{model_name} already logged."
+
+    all_metrics = []
+    for p in quality_csvs_paths:
+
+        print(f"Processing {p.name}...")
+        subset_name = p.stem
+
+        df = _load_df(p)
+        cur_metrics = benchmark_lemmatization_quality_single_df(predict_fn, df, get_sample_from_row)
+        for row in cur_metrics:
+            row["subset name"] = subset_name
+            row["model name"]
+
+        all_metrics.extend(cur_metrics)
+
+        df = pd.DataFrame(all_metrics)
+        quality_table = pd.concat([quality_table, df], ignore_index=True)
+
+    _save_df(quality_table, quality_table_path)
