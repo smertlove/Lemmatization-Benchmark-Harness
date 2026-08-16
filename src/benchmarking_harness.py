@@ -14,7 +14,7 @@ def _save_df(df: pd.DataFrame, name: Path):
     df.to_csv(name, sep="\t", index=None)
 
 
-def _benchmark_throughput_single_df(predict_fn, df: pd.DataFrame, get_sample_from_row):
+def _benchmark_throughput_single_df(predict_fn, clear_cache_fn, df: pd.DataFrame, get_sample_from_row):
     """
     Замеряет lps и lAcc.
     lps -- Lemmas per Second, кол-во лемм, которые мы генерируем за секунду.
@@ -22,6 +22,9 @@ def _benchmark_throughput_single_df(predict_fn, df: pd.DataFrame, get_sample_fro
 
     lAcc мерим чтобы понять, что predict_fn действительно работает как надо и мы не получаем там мусорные предсказания из-за ошибки.
     """
+
+    clear_cache_fn()
+
     inpts = df.apply(get_sample_from_row, axis=1).tolist()
     targets = df["lemma"].tolist()
     total = len(targets)
@@ -37,7 +40,8 @@ def _benchmark_throughput_single_df(predict_fn, df: pd.DataFrame, get_sample_fro
 
 
 def benchmark_throughput(
-    predict_fn,  # Note: это должен быть predict_fast или любая штука, активно привлекающая кеширование
+    predict_fn,
+    clear_cache_fn,
     model_name: str,
     get_sample_from_row,
     throughput_csvs_paths: list[Path],
@@ -53,10 +57,10 @@ def benchmark_throughput(
         subset_name = p.stem
 
         df = _load_df(p)
-        cur_metrics = _benchmark_throughput_single_df(predict_fn, df, get_sample_from_row)
+        cur_metrics = _benchmark_throughput_single_df(predict_fn, clear_cache_fn, df, get_sample_from_row)
         cur_metrics["dtype"] = dtype
         cur_metrics["caching"] = caching
-        cur_metrics["subset"] = subset_name
+        cur_metrics["subset name"] = subset_name
         cur_metrics["model name"] = model_name
 
         df = pd.DataFrame(cur_metrics)
