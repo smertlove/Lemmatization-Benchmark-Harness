@@ -11,7 +11,7 @@ def _load_df(path: Path):
 
 
 def _save_df(df: pd.DataFrame, name: Path):
-    df.to_csv(name, sep="\t", index=None, float_format="%.28f")
+    df.to_csv(name, sep="\t", index=None, float_format="%.8f")
 
 
 def _safe_mean(series: pd.Series) -> float:
