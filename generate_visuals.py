@@ -3,10 +3,13 @@ from pathlib import Path
 import pandas as pd
 
 from src.visuals import (
+    _CLASS_ORDER,
     _QUALITY_METRICS,
+    _SPLIT_PANEL_ORDER,
     _SUBSET_ORDER,
+    build_quality_table,
     plot_throughput,
-    save_quality_table,
+    write_quality_subset,
 )
 
 RESULTS = Path("results")
@@ -16,10 +19,6 @@ THROUGHPUT_PATH = RESULTS / "throughput.csv"
 QUALITY_PATH = RESULTS / "quality.csv"
 
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
-
-
-def _metric_slug(metric: str) -> str:
-    return metric.replace(" ", "_").replace("(", "").replace(")", "")
 
 
 def main() -> None:
@@ -38,15 +37,20 @@ def main() -> None:
     )
 
     subsets = [s for s in _SUBSET_ORDER if s in quality_df["subset name"].unique()]
+    readme_parts = ["# Quality results\n"]
     for subset_name in subsets:
-        for metric in _QUALITY_METRICS:
-            save_quality_table(
-                quality_df,
-                subset_name,
-                metric,
-                model_names,
-                save_path=QUALITY_OUT / f"{subset_name}_{_metric_slug(metric)}.png",
-            )
+        md_path = QUALITY_OUT / f"{subset_name}.md"
+        tex_path = QUALITY_OUT / f"{subset_name}.tex"
+        write_quality_subset(
+            quality_df,
+            subset_name,
+            model_names,
+            md_path=md_path,
+            tex_path=tex_path,
+        )
+        readme_parts.append(f"- [{subset_name}]({subset_name}.md)\n")
+
+    (QUALITY_OUT / "README.md").write_text("".join(readme_parts), encoding="utf-8")
 
 
 if __name__ == "__main__":

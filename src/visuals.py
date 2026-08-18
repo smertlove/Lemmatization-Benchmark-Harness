@@ -5,12 +5,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-_SPLIT_ORDER = ("holdout", "unknown", "all")
-_SPLIT_PANEL_ORDER = ("all", "holdout", "unknown")
-_CLASS_ORDER = ("1-100", "101-1000", "1001-10000", "10001-n", "punct", "all")
-_QUALITY_METRICS = ("lAcc", "lAcc (norm)", "CER (total)", "CER (errors)")
-_SUBSET_ORDER = ("test", "school", "poetic_18", "poetic_19", "poetic_20")
-
 
 def _higher_is_better(metric: str) -> bool:
     return metric.startswith("lAcc")
@@ -106,151 +100,155 @@ def plot_throughput(
     return fig
 
 
+_CLASS_ORDER = ("all", "1-100", "101-1000", "1001-10000", "10001-n", "punct")
+_QUALITY_METRICS = ("lAcc", "lAcc (norm)", "CER (total)", "CER (errors)")
+_SPLIT_PANEL_ORDER = ("all", "holdout", "unknown")
+_SUBSET_ORDER = ("test", "school", "poetic_18", "poetic_19", "poetic_20")
+
+
 def build_quality_table(
     quality_df: pd.DataFrame,
     subset_name: str,
-    metric: str,
-    model_names: list[str],
-) -> pd.DataFrame:
-    sub = quality_df[
-        (quality_df["subset name"] == subset_name)
-        & (quality_df["model name"].isin(model_names))
-    ]
-    table = sub.pivot(index="model name", columns=["split", "class"], values=metric)
-    table = table.reindex(model_names)
-    columns = [(split, cls) for split in _SPLIT_ORDER for cls in _CLASS_ORDER]
-    table = table.reindex(columns=columns)
-    table.index.name = "model name"
-    return table
-
-
-def build_quality_table_for_split(
-    quality_df: pd.DataFrame,
-    subset_name: str,
     split: str,
-    metric: str,
     model_names: list[str],
 ) -> pd.DataFrame:
+    """One split: rows are models, columns are (class, metric)."""
     sub = quality_df[
         (quality_df["subset name"] == subset_name)
         & (quality_df["split"] == split)
         & (quality_df["model name"].isin(model_names))
     ]
-    table = sub.pivot(index="model name", columns="class", values=metric)
-    table = table.reindex(model_names)
-    table = table.reindex(columns=_CLASS_ORDER)
-    table.index.name = "model name"
-    return table
-
-
-def style_quality_table(table: pd.DataFrame, metric: str) -> pd.io.formats.style.Styler:
-    higher = _higher_is_better(metric)
-
-    def bold_best(col: pd.Series) -> list[str]:
-        target = col.max() if higher else col.min()
-        return ["font-weight: bold" if np.isclose(v, target) else "" for v in col]
-
-    return table.style.apply(bold_best, axis=0)
-
-
-def quality_tables(
-    quality_df: pd.DataFrame,
-    model_names: list[str],
-    *,
-    metrics: tuple[str, ...] = _QUALITY_METRICS,
-) -> dict[tuple[str, str], pd.io.formats.style.Styler]:
-    """One styled table per (subset name, metric) pair."""
-    subsets = [s for s in _SUBSET_ORDER if s in quality_df["subset name"].unique()]
-    out: dict[tuple[str, str], pd.io.formats.style.Styler] = {}
-    for subset_name in subsets:
-        for metric in metrics:
-            table = build_quality_table(quality_df, subset_name, metric, model_names)
-            out[(subset_name, metric)] = style_quality_table(table, metric)
+    blocks: list[pd.DataFrame] = []
+    for cls in _CLASS_ORDER:
+        block = (
+            sub.loc[sub["class"] == cls]
+            .set_index("model name")[list(_QUALITY_METRICS)]
+            .reindex(model_names)
+        )
+        block.columns = pd.MultiIndex.from_product([[cls], list(_QUALITY_METRICS)])
+        blocks.append(block)
+    out = pd.concat(blocks, axis=1)
+    out.index.name = "model name"
     return out
 
 
-def _format_quality_value(value: float, metric: str) -> str:
-    if metric.startswith("lAcc"):
-        return f"{value:.2%}"
-    return f"{value:.4f}"
-
-
-def _best_value_mask(table: pd.DataFrame, metric: str) -> pd.DataFrame:
+def _is_best_in_column(series: pd.Series, model: str, metric: str) -> bool:
     higher = _higher_is_better(metric)
-    if higher:
-        return table.apply(lambda col: np.isclose(col, col.max()), axis=0)
-    return table.apply(lambda col: np.isclose(col, col.min()), axis=0)
+    target = series.max() if higher else series.min()
+    return bool(np.isclose(series.loc[model], target))
 
 
-def save_quality_table(
+def _metric_label_md(metric: str) -> str:
+    return {
+        "lAcc": "lAcc",
+        "lAcc (norm)": "lAcc_n",
+        "CER (total)": "CER",
+        "CER (errors)": "CER_e",
+    }[metric]
+
+
+def _metric_label_tex(metric: str) -> str:
+    return {
+        "lAcc": "lAcc",
+        "lAcc (norm)": "lAcc$_n$",
+        "CER (total)": "CER",
+        "CER (errors)": "CER$_e$",
+    }[metric]
+
+
+def _tex_escape(text: str) -> str:
+    return (
+        text.replace("\\", "\\textbackslash{}")
+        .replace("_", "\\_")
+        .replace("&", "\\&")
+        .replace("%", "\\%")
+    )
+
+
+def _split_table_html(data: pd.DataFrame, split: str) -> str:
+    n_metrics = len(_QUALITY_METRICS)
+    rows: list[str] = [f"<h3>{split}</h3>", "<table>", "<thead>"]
+    rows.append('<tr><th rowspan="2">model</th>')
+    for cls in _CLASS_ORDER:
+        rows.append(f'<th colspan="{n_metrics}">{cls}</th>')
+    rows.append("</tr><tr>")
+    for _cls in _CLASS_ORDER:
+        for metric in _QUALITY_METRICS:
+            rows.append(f"<th>{_metric_label_md(metric)}</th>")
+    rows.append("</tr></thead><tbody>")
+    for model in data.index:
+        rows.append(f"<tr><td>{model}</td>")
+        for col in data.columns:
+            val = data.loc[model, col]
+            metric = col[1]
+            if _is_best_in_column(data[col], model, metric):
+                rows.append(f"<td><strong>{val:.2f}</strong></td>")
+            else:
+                rows.append(f"<td>{val:.2f}</td>")
+        rows.append("</tr>")
+    rows.append("</tbody></table>")
+    return "\n".join(rows)
+
+
+def _split_table_tex(data: pd.DataFrame, split: str, subset_name: str) -> str:
+    n_metrics = len(_QUALITY_METRICS)
+    col_spec = "l|" + "|".join(["c" * n_metrics] * len(_CLASS_ORDER)) + "|"
+    lines = [
+        f"% {subset_name} — {split}",
+        f"\\begin{{table}}[ht]",
+        f"\\caption{{{_tex_escape(subset_name)} — {split}}}",
+        f"\\begin{{tabular}}{{{col_spec}}}",
+        "\\hline",
+    ]
+    class_row = ["\\multicolumn{1}{c|}{}"]
+    for cls in _CLASS_ORDER:
+        class_row.append(f"\\multicolumn{{{n_metrics}}}{{c|}}{{{cls}}}")
+    lines.append(" & ".join(class_row) + " \\\\")
+    metric_row = ["model"]
+    for _cls in _CLASS_ORDER:
+        for metric in _QUALITY_METRICS:
+            metric_row.append(_metric_label_tex(metric))
+    lines.append(" & ".join(metric_row) + " \\\\")
+    lines.append("\\hline")
+    for model in data.index:
+        cells = [_tex_escape(str(model))]
+        for col in data.columns:
+            val = data.loc[model, col]
+            metric = col[1]
+            cell = f"{val:.2f}"
+            if _is_best_in_column(data[col], model, metric):
+                cell = f"\\textbf{{{cell}}}"
+            cells.append(cell)
+        lines.append(" & ".join(cells) + " \\\\")
+    lines.extend(["\\hline", "\\end{tabular}", "\\end{table}", ""])
+    return "\n".join(lines)
+
+
+def write_quality_subset(
     quality_df: pd.DataFrame,
     subset_name: str,
-    metric: str,
     model_names: list[str],
     *,
-    save_path: Path | str,
+    md_path: Path | str,
+    tex_path: Path | str | None = None,
 ) -> None:
-    """Render quality tables (one per split) stacked vertically: all, holdout, unknown."""
-    split_tables = {
-        split: build_quality_table_for_split(
-            quality_df, subset_name, split, metric, model_names
-        )
-        for split in _SPLIT_PANEL_ORDER
-    }
-
-    nrows = len(model_names)
-    ncols = len(_CLASS_ORDER)
-    panel_h = nrows * 0.42 + 0.9
-    fig_w = max(10.0, ncols * 1.05)
-    fig_h = panel_h * len(_SPLIT_PANEL_ORDER) + 1.2
-
-    fig, axes = plt.subplots(
-        len(_SPLIT_PANEL_ORDER),
-        1,
-        figsize=(fig_w, fig_h),
-        squeeze=False,
-    )
-    fig.suptitle(f"{subset_name} — {metric}", fontsize=14, y=0.98)
-
-    for ax, split in zip(axes.flat, _SPLIT_PANEL_ORDER, strict=True):
-        table = split_tables[split]
-        cell_text = table.map(lambda v: _format_quality_value(v, metric))
-        best = _best_value_mask(table, metric)
-
-        ax.axis("off")
-        ax.set_title(split, fontsize=11, loc="center", pad=6)
-
-        mpl_table = ax.table(
-            cellText=cell_text.to_numpy(),
-            rowLabels=table.index,
-            colLabels=list(_CLASS_ORDER),
-            loc="center",
-            cellLoc="center",
-        )
-        mpl_table.auto_set_font_size(False)
-        mpl_table.set_fontsize(8)
-        mpl_table.scale(1.0, 1.3)
-
-        for i in range(nrows):
-            for j in range(ncols):
-                cell = mpl_table[(i + 1, j)]
-                if best.iloc[i, j]:
-                    cell.set_text_props(fontweight="bold")
-
-        for (row, col), cell in mpl_table.get_celld().items():
-            if row == 0 or col == -1:
-                cell.set_text_props(fontweight="bold")
-
-    fig.tight_layout(rect=(0, 0, 1, 0.96))
-    fig.savefig(save_path, bbox_inches="tight", dpi=150)
-    plt.close(fig)
+    """Write one subset as Markdown (HTML tables) and optional LaTeX."""
+    md_parts = [f"# {subset_name}\n"]
+    tex_parts = []
+    for split in _SPLIT_PANEL_ORDER:
+        data = build_quality_table(quality_df, subset_name, split, model_names)
+        md_parts.append(_split_table_html(data, split))
+        md_parts.append("")
+        if tex_path is not None:
+            tex_parts.append(_split_table_tex(data, split, subset_name))
+    Path(md_path).write_text("\n".join(md_parts), encoding="utf-8")
+    if tex_path is not None:
+        Path(tex_path).write_text("\n".join(tex_parts), encoding="utf-8")
 
 
 __all__ = (
     "plot_throughput",
     "build_quality_table",
-    "build_quality_table_for_split",
-    "style_quality_table",
-    "quality_tables",
-    "save_quality_table",
+    "write_quality_subset",
+    "_SUBSET_ORDER",
 )
