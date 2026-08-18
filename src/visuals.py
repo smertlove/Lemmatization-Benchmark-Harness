@@ -6,7 +6,7 @@ import seaborn as sns
 
 
 def _build_palette(model_order: list[str], colors: dict[str, str]) -> dict[str, str]:
-    default_colors = sns.color_palette("winter", n_colors=len(model_order))
+    default_colors = sns.color_palette("cool_r", n_colors=len(model_order))
     palette = dict(zip(model_order, default_colors, strict=True))
     palette.update({model: color for model, color in colors.items() if model in palette})
     return palette
