@@ -19,6 +19,52 @@ QUALITY_PATH = RESULTS / "quality.csv"
 # Throughput bar chart: highlight this model on the x-axis
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
 
+_README_PATH = Path("README.md")
+_BENCHMARKS_START = "<!-- AUTO-GENERATED-BENCHMARKS:START -->"
+_BENCHMARKS_END = "<!-- AUTO-GENERATED-BENCHMARKS:END -->"
+
+
+def _quality_md_for_readme(path: Path) -> str:
+    """Drop redundant top-level # title; keep HTML tables for GitHub rendering."""
+    text = path.read_text(encoding="utf-8").strip()
+    lines = text.splitlines()
+    if lines and lines[0].startswith("# "):
+        lines = lines[1:]
+    return "\n".join(lines).strip()
+
+
+def update_root_readme(subsets: list[str]) -> None:
+    """Refresh the auto-generated benchmark block in README.md."""
+    quality_sections: list[str] = []
+    for subset_name in subsets:
+        md_path = QUALITY_OUT / f"{subset_name}.md"
+        if not md_path.is_file():
+            continue
+        quality_sections.append(f"#### {subset_name}\n\n{_quality_md_for_readme(md_path)}")
+
+    generated = f"""{_BENCHMARKS_START}
+
+## Benchmark results
+
+### Throughput
+
+![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
+
+### Quality
+
+{chr(10).join(quality_sections)}
+
+{_BENCHMARKS_END}
+"""
+    readme = _README_PATH.read_text(encoding="utf-8")
+    if _BENCHMARKS_START in readme and _BENCHMARKS_END in readme:
+        before, rest = readme.split(_BENCHMARKS_START, 1)
+        _mid, after = rest.split(_BENCHMARKS_END, 1)
+        readme = before.rstrip() + "\n\n" + generated.rstrip() + "\n" + after.lstrip()
+    else:
+        readme = readme.rstrip() + "\n\n" + generated
+    _README_PATH.write_text(readme, encoding="utf-8")
+
 
 def main() -> None:
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -50,6 +96,8 @@ def main() -> None:
         readme_parts.append(f"- [{subset_name}]({subset_name}.md)\n")
 
     (QUALITY_OUT / "README.md").write_text("".join(readme_parts), encoding="utf-8")
+
+    update_root_readme(subsets)
 
 
 if __name__ == "__main__":
