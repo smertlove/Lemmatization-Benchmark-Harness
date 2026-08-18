@@ -1,0 +1,6 @@
+metric name	description
+LPS	Amound of lemma predictions generated per second.
+lAcc	Lemmatization Accuracy (Lyashevskaya et al., 2020), which is a standard accuracy metric, disregarding letter capitalization and е or ё choice in prediction and label.
+lAcc (norm)	Lemmatization Accuracy calculated on lemmatized forms of both prediction and label.
+CER (total)	Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between alld predictions and their corresponding labels.
+CER (errors)	Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between wrong predictions and their corresponding labels.
