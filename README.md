@@ -6,11 +6,7 @@
 
 ## Benchmark results
 
-### Throughput
-
-![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
-
-### Quality
+### Metrics
 
 | Metric | Description |
 | --- | --- |
@@ -20,7 +16,24 @@
 | `CER (total)` | Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between alld predictions and their corresponding labels. |
 | `CER (errors)` | Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between wrong predictions and their corresponding labels. |
 
-#### test
+### Models
+
+| Model | Parameters | Comment |
+| --- | ---: | --- |
+| `baseline` | 139,420,416 | RNC model (Afanasev et al., 2025) |
+| `distill_4-4` | 92,330,752 | response-based distilled baseline |
+| `ruT5_base` | 222,903,552 | This model exhibited comparable LPS while employing twice as much parameters because of the tokenizer |
+| `BART_4-4-404_66m` | 101,127,168 | best performing BART model with 4 layers of encoder/decoder and an extended char-level BPE tokenizer |
+| `BART_3-3-404` | 40,645,632 | BART model with 3 layers of encoder/decoder and an extended char-level BPE tokenizer |
+| `BART_4-4-1238_67m` | 67,269,120 | BART model with 4 layers of encoder/decoder and a mowphologically-aware tokenizer (trained on corpus with unsplit affixes and splitted roots) |
+
+### Throughput
+
+![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
+
+### Quality
+
+<h2> test
 
 <h3>all</h3>
 <table>
@@ -602,8 +615,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### school
+</tbody></table> </h2>
+<h2> school
 
 <h3>all</h3>
 <table>
@@ -1185,8 +1198,8 @@
 <td>0.02</td>
 <td>2.78</td>
 </tr>
-</tbody></table>
-#### poetic_18
+</tbody></table> </h2>
+<h2> poetic_18
 
 <h3>all</h3>
 <table>
@@ -1768,8 +1781,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### poetic_19
+</tbody></table> </h2>
+<h2> poetic_19
 
 <h3>all</h3>
 <table>
@@ -2351,8 +2364,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### poetic_20
+</tbody></table> </h2>
+<h2> poetic_20
 
 <h3>all</h3>
 <table>
@@ -2934,6 +2947,6 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
+</tbody></table> </h2>
 
 <!-- AUTO-GENERATED-BENCHMARKS:END -->

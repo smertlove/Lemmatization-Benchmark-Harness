@@ -16,6 +16,7 @@ QUALITY_OUT = RESULTS / "quality"
 THROUGHPUT_PATH = RESULTS / "throughput.csv"
 QUALITY_PATH = RESULTS / "quality.csv"
 METRICS_PATH = RESULTS / "metrics.csv"
+MODELS_PATH = RESULTS / "models.csv"
 
 # Throughput bar chart: highlight this model on the x-axis
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
@@ -45,6 +46,18 @@ def _metrics_section_for_readme() -> str:
     return "\n".join(lines)
 
 
+def _models_section_for_readme() -> str:
+    """Markdown table of benchmarked models from results/models.csv."""
+    df = pd.read_csv(MODELS_PATH, sep="\t")
+    lines = ["| Model | Parameters | Comment |", "| --- | ---: | --- |"]
+    for _, row in df.iterrows():
+        name = str(row["model name"])
+        n_params = int(row["n-parameters"])
+        comment = str(row["comment"])
+        lines.append(f"| `{name}` | {n_params:,} | {comment} |")
+    return "\n".join(lines)
+
+
 def update_root_readme(subsets: list[str]) -> None:
     """Refresh the auto-generated benchmark block in README.md."""
     quality_sections: list[str] = []
@@ -60,13 +73,19 @@ def update_root_readme(subsets: list[str]) -> None:
 
 ## Benchmark results
 
+### Metrics
+
+{_metrics_section_for_readme()}
+
+### Models
+
+{_models_section_for_readme()}
+
 ### Throughput
 
 ![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
 
 ### Quality
-
-{_metrics_section_for_readme()}
 
 {chr(10).join(quality_sections)}
 

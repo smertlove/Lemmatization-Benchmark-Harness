@@ -1,0 +1,7 @@
+model name	n-parameters	comment
+baseline	139420416	RNC model (Afanasev et al., 2025)
+distill_4-4	92330752	response-based distilled baseline
+ruT5_base	222903552	This model exhibited comparable LPS while employing twice as much parameters because of the tokenizer
+BART_4-4-404_66m	101127168	best performing BART model with 4 layers of encoder/decoder and an extended char-level BPE tokenizer
+BART_3-3-404	40645632	BART model with 3 layers of encoder/decoder and an extended char-level BPE tokenizer
+BART_4-4-1238_67m	67269120	BART model with 4 layers of encoder/decoder and a mowphologically-aware tokenizer (trained on corpus with unsplit affixes and splitted roots)
