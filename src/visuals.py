@@ -62,6 +62,12 @@ def plot_throughput(
             legend=False,
             ax=ax,
         )
+        for tick in ax.get_xticklabels():
+            model = tick.get_text()
+            if model in colors:
+                tick.set_color(colors[model])
+                tick.set_fontweight('bold')
+
         ax.set_title(title)
         ax.set_xlabel("")
         ax.set_ylabel(metric)
