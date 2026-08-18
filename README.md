@@ -12,7 +12,15 @@
 
 ### Quality
 
-<h2> test
+| Metric | Description |
+| --- | --- |
+| `LPS` | Amound of lemma predictions generated per second. |
+| `lAcc` | Lemmatization Accuracy (Lyashevskaya et al., 2020), which is a standard accuracy metric, disregarding letter capitalization and е or ё choice in prediction and label. |
+| `lAcc (norm)` | Lemmatization Accuracy calculated on lemmatized forms of both prediction and label. |
+| `CER (total)` | Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between alld predictions and their corresponding labels. |
+| `CER (errors)` | Character Error Rate (MacKenzie & Soukoreff, 2002) calculated between wrong predictions and their corresponding labels. |
+
+#### test
 
 <h3>all</h3>
 <table>
@@ -594,8 +602,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table> </h2> <hr>
-<h2> school
+</tbody></table>
+#### school
 
 <h3>all</h3>
 <table>
@@ -1177,8 +1185,8 @@
 <td>0.02</td>
 <td>2.78</td>
 </tr>
-</tbody></table> </h2> <hr>
-<h2> poetic_18
+</tbody></table>
+#### poetic_18
 
 <h3>all</h3>
 <table>
@@ -1760,8 +1768,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table> </h2> <hr>
-<h2> poetic_19
+</tbody></table>
+#### poetic_19
 
 <h3>all</h3>
 <table>
@@ -2343,8 +2351,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table> </h2> <hr>
-<h2> poetic_20
+</tbody></table>
+#### poetic_20
 
 <h3>all</h3>
 <table>
@@ -2926,6 +2934,6 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table> </h2> <hr>
+</tbody></table>
 
 <!-- AUTO-GENERATED-BENCHMARKS:END -->

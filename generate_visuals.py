@@ -15,6 +15,7 @@ QUALITY_OUT = RESULTS / "quality"
 
 THROUGHPUT_PATH = RESULTS / "throughput.csv"
 QUALITY_PATH = RESULTS / "quality.csv"
+METRICS_PATH = RESULTS / "metrics.csv"
 
 # Throughput bar chart: highlight this model on the x-axis
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
@@ -33,6 +34,17 @@ def _quality_md_for_readme(path: Path) -> str:
     return "\n".join(lines).strip()
 
 
+def _metrics_section_for_readme() -> str:
+    """Markdown table of metric names and descriptions from results/metrics.csv."""
+    df = pd.read_csv(METRICS_PATH, sep="\t")
+    lines = ["| Metric | Description |", "| --- | --- |"]
+    for _, row in df.iterrows():
+        name = str(row["metric name"])
+        desc = str(row["description"])
+        lines.append(f"| `{name}` | {desc} |")
+    return "\n".join(lines)
+
+
 def update_root_readme(subsets: list[str]) -> None:
     """Refresh the auto-generated benchmark block in README.md."""
     quality_sections: list[str] = []
@@ -40,7 +52,9 @@ def update_root_readme(subsets: list[str]) -> None:
         md_path = QUALITY_OUT / f"{subset_name}.md"
         if not md_path.is_file():
             continue
-        quality_sections.append(f"<h2> {subset_name}\n\n{_quality_md_for_readme(md_path)} </h2> <hr>")
+        quality_sections.append(
+            f"<h2> {subset_name}\n\n{_quality_md_for_readme(md_path)} </h2>"
+        )
 
     generated = f"""{_BENCHMARKS_START}
 
@@ -51,6 +65,8 @@ def update_root_readme(subsets: list[str]) -> None:
 ![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
 
 ### Quality
+
+{_metrics_section_for_readme()}
 
 {chr(10).join(quality_sections)}
 
