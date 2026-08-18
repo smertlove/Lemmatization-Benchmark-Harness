@@ -40,7 +40,7 @@ def update_root_readme(subsets: list[str]) -> None:
         md_path = QUALITY_OUT / f"{subset_name}.md"
         if not md_path.is_file():
             continue
-        quality_sections.append(f"#### {subset_name}\n\n{_quality_md_for_readme(md_path)}")
+        quality_sections.append(f"<h2> {subset_name}\n\n{_quality_md_for_readme(md_path)} </h2> <hr>")
 
     generated = f"""{_BENCHMARKS_START}
 

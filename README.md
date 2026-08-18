@@ -12,7 +12,7 @@
 
 ### Quality
 
-#### test
+<h2> test
 
 <h3>all</h3>
 <table>
@@ -594,8 +594,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### school
+</tbody></table> </h2> <hr>
+<h2> school
 
 <h3>all</h3>
 <table>
@@ -1177,8 +1177,8 @@
 <td>0.02</td>
 <td>2.78</td>
 </tr>
-</tbody></table>
-#### poetic_18
+</tbody></table> </h2> <hr>
+<h2> poetic_18
 
 <h3>all</h3>
 <table>
@@ -1760,8 +1760,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### poetic_19
+</tbody></table> </h2> <hr>
+<h2> poetic_19
 
 <h3>all</h3>
 <table>
@@ -2343,8 +2343,8 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
-#### poetic_20
+</tbody></table> </h2> <hr>
+<h2> poetic_20
 
 <h3>all</h3>
 <table>
@@ -2926,6 +2926,6 @@
 <td><strong>0.00</strong></td>
 <td><strong>0.00</strong></td>
 </tr>
-</tbody></table>
+</tbody></table> </h2> <hr>
 
 <!-- AUTO-GENERATED-BENCHMARKS:END -->
