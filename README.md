@@ -2,6 +2,12 @@
 
 Обвязка для замеров качества/быстродействия генеративных моделей для задач лемматизации
 
+Для перегенерации визуала:
+
+```bash
+uv run generate_visuals.py 
+```
+
 <!-- AUTO-GENERATED-BENCHMARKS:START -->
 
 ## Benchmark results
