@@ -62,6 +62,18 @@ def plot_throughput(
             legend=False,
             ax=ax,
         )
+        lacc_by_model = subset.set_index("model name")["lAcc"]
+        bars = sorted(ax.patches, key=lambda bar: bar.get_x())
+        for bar, tick in zip(bars, ax.get_xticklabels(), strict=True):
+            model = tick.get_text()
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height(),
+                f"{lacc_by_model[model]:.2%} lAcc",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
         for tick in ax.get_xticklabels():
             model = tick.get_text()
             if model in colors:
@@ -72,7 +84,7 @@ def plot_throughput(
         ax.set_xlabel("")
         ax.set_ylabel(metric)
         ax.tick_params(axis="x", rotation=45)
-        ax.margins(y=0.08)
+        ax.margins(y=0.12)
 
     fig.suptitle("Throughput by model", y=1.02)
     fig.tight_layout()
