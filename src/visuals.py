@@ -1,3 +1,5 @@
+"""Benchmark result visualization and export (throughput plots, quality tables)."""
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -7,10 +9,12 @@ import seaborn as sns
 
 
 def _higher_is_better(metric: str) -> bool:
+    """Accuracy-like metrics are better when higher; CER when lower."""
     return metric.startswith("lAcc")
 
 
 def _build_palette(model_order: list[str], colors: dict[str, str]) -> dict[str, str]:
+    """Map models to bar colors; explicit overrides win over the default seaborn scale."""
     default_colors = sns.color_palette("cool_r", n_colors=len(model_order))
     palette = dict(zip(model_order, default_colors, strict=True))
     palette.update({model: color for model, color in colors.items() if model in palette})
@@ -68,6 +72,7 @@ def plot_throughput(
             ax=ax,
         )
         lacc_by_model = subset.set_index("model name")["lAcc"]
+        # hue order != left-to-right bar order; sort patches by x to match tick labels
         bars = sorted(ax.patches, key=lambda bar: bar.get_x())
         for bar, tick in zip(bars, ax.get_xticklabels(), strict=True):
             model = tick.get_text()
@@ -100,9 +105,10 @@ def plot_throughput(
     return fig
 
 
+# Column order for quality tables: freq class buckets, then eval split, then data subset
 _CLASS_ORDER = ("all", "1-100", "101-1000", "1001-10000", "10001-n", "punct")
 _QUALITY_METRICS = ("lAcc", "lAcc (norm)", "CER (total)", "CER (errors)")
-_SPLIT_PANEL_ORDER = ("all", "holdout", "unknown")
+_SPLIT_PANEL_ORDER = ("all", "holdout", "unknown")  # stacked top → bottom in exports
 _SUBSET_ORDER = ("test", "school", "poetic_18", "poetic_19", "poetic_20")
 
 
@@ -112,7 +118,7 @@ def build_quality_table(
     split: str,
     model_names: list[str],
 ) -> pd.DataFrame:
-    """One split: rows are models, columns are (class, metric)."""
+    """Build model × (freq class, metric) frame for one eval split and data subset."""
     sub = quality_df[
         (quality_df["subset name"] == subset_name)
         & (quality_df["split"] == split)
@@ -166,6 +172,7 @@ def _tex_escape(text: str) -> str:
 
 
 def _split_table_html(data: pd.DataFrame, split: str) -> str:
+    """HTML table with colspan class headers and a second header row for metrics."""
     n_metrics = len(_QUALITY_METRICS)
     rows: list[str] = [f"<h3>{split}</h3>", "<table>", "<thead>"]
     rows.append('<tr><th rowspan="2">model</th>')
@@ -191,6 +198,7 @@ def _split_table_html(data: pd.DataFrame, split: str) -> str:
 
 
 def _split_table_tex(data: pd.DataFrame, split: str, subset_name: str) -> str:
+    """Standalone LaTeX table block (wrap in a document to compile)."""
     n_metrics = len(_QUALITY_METRICS)
     col_spec = "l|" + "|".join(["c" * n_metrics] * len(_CLASS_ORDER)) + "|"
     lines = [
@@ -232,7 +240,7 @@ def write_quality_subset(
     md_path: Path | str,
     tex_path: Path | str | None = None,
 ) -> None:
-    """Write one subset as Markdown (HTML tables) and optional LaTeX."""
+    """Write Markdown (embedded HTML tables) and optional LaTeX for one data subset."""
     md_parts = [f"# {subset_name}\n"]
     tex_parts = []
     for split in _SPLIT_PANEL_ORDER:

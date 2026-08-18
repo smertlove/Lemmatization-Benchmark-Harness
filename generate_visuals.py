@@ -1,13 +1,11 @@
+"""Generate static benchmark artifacts from results/*.csv (throughput plot + quality tables)."""
+
 from pathlib import Path
 
 import pandas as pd
 
 from src.visuals import (
-    _CLASS_ORDER,
-    _QUALITY_METRICS,
-    _SPLIT_PANEL_ORDER,
     _SUBSET_ORDER,
-    build_quality_table,
     plot_throughput,
     write_quality_subset,
 )
@@ -18,6 +16,7 @@ QUALITY_OUT = RESULTS / "quality"
 THROUGHPUT_PATH = RESULTS / "throughput.csv"
 QUALITY_PATH = RESULTS / "quality.csv"
 
+# Throughput bar chart: highlight this model on the x-axis
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
 
 
