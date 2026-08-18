@@ -17,6 +17,7 @@ THROUGHPUT_PATH = RESULTS / "throughput.csv"
 QUALITY_PATH = RESULTS / "quality.csv"
 METRICS_PATH = RESULTS / "metrics.csv"
 MODELS_PATH = RESULTS / "models.csv"
+TOKENIZERS_PATH = RESULTS / "tokenizers.csv"
 
 # Throughput bar chart: highlight this model on the x-axis
 HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
@@ -58,6 +59,30 @@ def _models_section_for_readme() -> str:
     return "\n".join(lines)
 
 
+def _tokenizers_section_for_readme() -> str:
+    """Markdown table of tokenizers from results/tokenizers.csv."""
+    df = pd.read_csv(TOKENIZERS_PATH, sep="\t")
+    lines = [
+        "| Tokenizer | Vocab size | Example input | Tokens | Example output |",
+        "| --- | ---: | --- | ---: | --- |",
+    ]
+    for _, row in df.iterrows():
+        name = str(row["наименование"])
+        vocab_raw = row["размер словаря"]
+        if pd.isna(vocab_raw) or str(vocab_raw).strip() == "-":
+            vocab_cell = "—"
+        else:
+            vocab_cell = f"{int(vocab_raw):,}"
+        example_in = str(row["пример входа"])
+        n_tokens = int(row["кол-во токенов"])
+        example_out = str(row["пример выхода"])
+        # keep table on one line; backticks for token lists
+        lines.append(
+            f"| {name} | {vocab_cell} | `{example_in}` | {n_tokens} | `{example_out}` |"
+        )
+    return "\n".join(lines)
+
+
 def update_root_readme(subsets: list[str]) -> None:
     """Refresh the auto-generated benchmark block in README.md."""
     quality_sections: list[str] = []
@@ -80,6 +105,8 @@ def update_root_readme(subsets: list[str]) -> None:
 ### Models
 
 {_models_section_for_readme()}
+
+{_tokenizers_section_for_readme()}
 
 ### Throughput
 

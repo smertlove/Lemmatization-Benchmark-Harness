@@ -33,6 +33,15 @@ uv run generate_visuals.py
 | `BART_3-3-404` | 40,645,632 | BART model with 3 layers of encoder/decoder and an extended char-level BPE tokenizer |
 | `BART_4-4-1238_67m` | 67,269,120 | BART model with 4 layers of encoder/decoder and a mowphologically-aware tokenizer (trained on corpus with unsplit affixes and splitted roots) |
 
+| Tokenizer | Vocab size | Example input | Tokens | Example output |
+| --- | ---: | --- | ---: | --- |
+| BART-base BPE | 50,265 | `свежевскопанный` | 19 | `['<s>', 'Ñģ', 'Ð²', 'Ðµ', 'Ð', '¶', 'Ðµ', 'Ð²', 'Ñģ', 'Ðº', 'Ð¾Ð', '¿', 'Ð°', 'Ð½', 'Ð½', 'Ñĭ', 'Ð', '¹', '</s>']` |
+| ruT5 BPE | 32,100 | `свежевскопанный` | 5 | `['▁свеже', 'в', 'скоп', 'анный', '</s>']` |
+| Char-level tokenizer | 404 | `свежевскопанный` | 17 | `['[BOS]', 'с', 'в', 'е', 'ж', 'е', 'в', 'с', 'к', 'о', 'п', 'а', 'н', 'н', 'ы', 'й', '[EOS]']` |
+| Morph-aware tokenizer with split roots | 1,238 | `свежевскопанный` | 14 | `['<s>', 'св', '##е', '##ж', '##е', '##в', '##ск', '##о', '##п', '##ан', '##н', '##ы', '##й', '</s>']` |
+| Теоретический вариант на морфемах | — | `свежевскопанный` | 9 | `[<BOS>, 'свеж', 'е', 'вс', 'коп', 'а', 'нн', 'ый', <EOS>]` |
+| Теоретический вариант на слогах | — | `свежевскопанный` | 7 | `[<BOS>, 'све', 'же', 'вско', 'па', 'нный', <EOS>]` |
+
 ### Throughput
 
 ![Throughput by model, fp32/fp16 and caching](results/throughput_bars.png)
