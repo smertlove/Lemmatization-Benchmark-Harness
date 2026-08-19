@@ -5,3 +5,4 @@ ruT5_base	222903552	This model exhibited comparable LPS while employing twice as
 BART_4-4-404_66m	101127168	best performing BART model with 4 layers of encoder/decoder and an extended char-level BPE tokenizer
 BART_3-3-404	40645632	BART model with 3 layers of encoder/decoder and an extended char-level BPE tokenizer
 BART_4-4-1238_67m	67269120	BART model with 4 layers of encoder/decoder and a mowphologically-aware tokenizer (trained on corpus with unsplit affixes and splitted roots)
+BART_6-6-9782_107m	106953216	BART model with 4 layers of encoder/decoder and a mowphologically-aware tokenizer
