@@ -20,7 +20,7 @@ MODELS_PATH = RESULTS / "models.csv"
 TOKENIZERS_PATH = RESULTS / "tokenizers.csv"
 
 # Throughput bar chart: highlight this model on the x-axis
-HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "red"}
+HIGHLIGHT_COLORS = {"BART_4-4-404_66m": "green", "baseline": "red", "Stanza": "orange"}
 
 _README_PATH = Path("README.md")
 _BENCHMARKS_START = "<!-- AUTO-GENERATED-BENCHMARKS:START -->"
