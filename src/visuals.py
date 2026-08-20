@@ -83,7 +83,7 @@ def plot_throughput(
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height(),
-                f"{lacc_by_model[model]:.2%} lAcc",
+                f"{lacc_by_model[model]:.2f} lAcc",
                 ha="center",
                 va="bottom",
                 fontsize=9,
