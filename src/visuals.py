@@ -49,6 +49,10 @@ def plot_throughput(
     fig, axes = plt.subplots(2, 2, figsize=figsize)
     axes_flat = axes.flatten()
 
+    # One palette for all models so colors stay consistent across dtype/caching panels
+    # (e.g. Stanza only appears in fp32/no-cache but must not shift other models' hues).
+    global_palette = _build_palette(sorted(model_names), colors)
+
     for ax, (dtype, caching, title) in zip(axes_flat, permutations, strict=True):
         subset = throughput_df[
             (throughput_df["dtype"] == dtype)
@@ -59,7 +63,7 @@ def plot_throughput(
             subset.sort_values(metric, ascending=False)["model name"]
             .tolist()
         )
-        palette = _build_palette(order, colors)
+        palette = {model: global_palette[model] for model in order}
 
         sns.barplot(
             data=subset,
