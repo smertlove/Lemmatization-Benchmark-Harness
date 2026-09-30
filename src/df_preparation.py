@@ -61,7 +61,6 @@ def filter_irrelevant(df):
         ~df["feats"].str.contains("Typo", na=False)
         & ~df["feats"].str.contains("Abbr", na=False)
         & ~df["feats"].str.contains("Anom", na=False)
-        & ~df["feats"].str.contains("SYM", na=False)
     ]
     return df_filtered
 
