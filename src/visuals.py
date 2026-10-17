@@ -97,7 +97,7 @@ def plot_throughput(
         ax.set_title(title)
         ax.set_xlabel("")
         ax.set_ylabel(metric)
-        ax.tick_params(axis="x", rotation=45)
+        ax.tick_params(axis="x", rotation=90)
         ax.margins(y=0.12)
 
     fig.suptitle("Throughput by model", y=1.02)
