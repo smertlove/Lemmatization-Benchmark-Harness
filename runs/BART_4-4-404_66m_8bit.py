@@ -90,7 +90,7 @@ def run_throughput_benchmark(
     benchmark_throughput(
         predict_fn,
         gen_model.clear_cache,
-        MODEL_NAME,
+        MODEL_NAME + "_8bit",
         get_sample_from_row_original,
         throughput_csvs,
         throughput_table,
