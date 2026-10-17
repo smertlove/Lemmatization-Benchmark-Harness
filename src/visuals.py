@@ -83,7 +83,7 @@ def plot_throughput(
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height(),
-                f"{lacc_by_model[model]:.2f} lAcc",
+                f"{lacc_by_model[model]:.3f} lAcc",
                 ha="center",
                 va="bottom",
                 fontsize=9,
@@ -193,9 +193,9 @@ def _split_table_html(data: pd.DataFrame, split: str) -> str:
             val = data.loc[model, col]
             metric = col[1]
             if _is_best_in_column(data[col], model, metric):
-                rows.append(f"<td><strong>{val:.2f}</strong></td>")
+                rows.append(f"<td><strong>{val:.3f}</strong></td>")
             else:
-                rows.append(f"<td>{val:.2f}</td>")
+                rows.append(f"<td>{val:.3f}</td>")
         rows.append("</tr>")
     rows.append("</tbody></table>")
     return "\n".join(rows)
@@ -227,7 +227,7 @@ def _split_table_tex(data: pd.DataFrame, split: str, subset_name: str) -> str:
         for col in data.columns:
             val = data.loc[model, col]
             metric = col[1]
-            cell = f"{val:.2f}"
+            cell = f"{val:.3f}"
             if _is_best_in_column(data[col], model, metric):
                 cell = f"\\textbf{{{cell}}}"
             cells.append(cell)
